@@ -1,0 +1,31 @@
+#!/usr/bin/ruby
+
+MEMO_FILE = File.join(ENV['HOME'], '.memo/memos')
+
+unless File.exists?(MEMO_FILE)
+  unless File.exists? File.join(ENV['HOME'], '.memo')
+    Dir.mkdir(File.join(ENV['HOME'], '.memo'))
+    File.new(MEMO_FILE, 'w+')
+  end
+end
+
+def push(arg)
+  File.open(MEMO_FILE,'a') do |f|
+    f.puts arg  
+  end
+end
+
+def pop
+  File.open(MEMO_FILE,'r') do |f|
+    f.readlines.reverse.each do |line|
+      print line
+      STDIN.readline
+    end
+  end
+end
+
+if (arg = ARGV.shift)
+  push arg
+else
+  pop
+end
