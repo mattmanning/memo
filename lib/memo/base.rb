@@ -4,13 +4,9 @@ module Memo
       home        = ENV['HOME']
       memo_dir    = File.join(home, '.memo')
       @memo_file  = File.join(home, '.memo/memos')
+      @memo_stack = File.open(@memo_file, 'r').readlines
 
-      unless File.exists?(@memo_file)
-        unless File.exists?(memo_dir)
-          Dir.mkdir memo_dir
-          File.new(@memo_file, 'w+')
-        end
-      end
+      create_memo_file!
     end
 
     def push(arg)
@@ -20,10 +16,16 @@ module Memo
     end
 
     def pop
-      File.open(@memo_file,'r') do |f|
-        f.readlines.reverse.each do |line|
-          print line
-          STDIN.readline
+      @memo_stack.pop
+    end
+
+    private
+
+    def create_memo_file!
+      unless File.exists?(@memo_file)
+        unless File.exists?(memo_dir)
+          Dir.mkdir memo_dir
+          File.new(@memo_file, 'w+')
         end
       end
     end

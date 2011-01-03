@@ -7,5 +7,8 @@ memo = Memo::Base.new
 if (arg = ARGV.shift)
   memo.push arg
 else
-  memo.pop
+  while m = memo.pop
+    puts m
+    STDIN.readline
+  end
 end
