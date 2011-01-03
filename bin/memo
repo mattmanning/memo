@@ -1,31 +1,14 @@
-#!/usr/bin/ruby
+#!/usr/bin/env ruby
 
-MEMO_FILE = File.join(ENV['HOME'], '.memo/memos')
+require File.dirname(__FILE__) + '/../lib/memo'
 
-unless File.exists?(MEMO_FILE)
-  unless File.exists? File.join(ENV['HOME'], '.memo')
-    Dir.mkdir(File.join(ENV['HOME'], '.memo'))
-    File.new(MEMO_FILE, 'w+')
-  end
-end
-
-def push(arg)
-  File.open(MEMO_FILE,'a') do |f|
-    f.puts arg  
-  end
-end
-
-def pop
-  File.open(MEMO_FILE,'r') do |f|
-    f.readlines.reverse.each do |line|
-      print line
-      STDIN.readline
-    end
-  end
-end
+memo = Memo::Base.new
 
 if (arg = ARGV.shift)
-  push arg
+  memo.push arg
 else
-  pop
+  while m = memo.pop
+    puts m
+    STDIN.readline
+  end
 end
