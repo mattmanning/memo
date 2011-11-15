@@ -1,1 +1,2 @@
-require File.dirname(__FILE__) + '/memo/base'
+require "memo/base"
+require "memo/version"
