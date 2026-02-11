@@ -4,11 +4,20 @@ A task stack for your terminal. When you get pulled into something new, push it 
 
 ## Install
 
+### Homebrew
+
+```
+brew tap mattmanning/tap
+brew install memo
+```
+
+### Go
+
 ```
 go install github.com/mattmanning/memo@latest
 ```
 
-Or build from source:
+### From source
 
 ```
 git clone https://github.com/mattmanning/memo.git
