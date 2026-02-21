@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -43,6 +44,31 @@ type LogEntry struct {
 	Started string `json:"started"`
 	Stopped string `json:"stopped"`
 	Reason  string `json:"reason"`
+}
+
+func LoadLog(path string) ([]LogEntry, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return []LogEntry{}, nil
+		}
+		return nil, err
+	}
+	var entries []LogEntry
+	for _, line := range strings.Split(strings.TrimSpace(string(data)), "\n") {
+		if line == "" {
+			continue
+		}
+		var entry LogEntry
+		if err := json.Unmarshal([]byte(line), &entry); err != nil {
+			continue
+		}
+		entries = append(entries, entry)
+	}
+	if entries == nil {
+		entries = []LogEntry{}
+	}
+	return entries, nil
 }
 
 func LogTaskStop(path string, task Task, stoppedAt time.Time, reason string) error {

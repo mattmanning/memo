@@ -36,6 +36,10 @@ func main() {
 		runClient("pop")
 	case "switch":
 		runClient("switch")
+	case "log":
+		runClient("log")
+	case "history":
+		runClient("history")
 	case "queue":
 		if len(args) < 2 {
 			fmt.Fprintln(os.Stderr, "Usage: memo queue <description>")
@@ -68,6 +72,10 @@ func runClient(command string, args ...string) {
 		c.Switch()
 	case "queue":
 		c.Queue(args[0])
+	case "log":
+		c.Log()
+	case "history":
+		c.History()
 	}
 }
 
@@ -81,5 +89,7 @@ Usage:
   memo pop                Pop the current task off the stack
   memo switch             Swap the top two tasks
   memo queue <description> Add a task to the bottom of the stack
+  memo log                Show all task activity log
+  memo history            Show completed tasks with durations
   memo --help             Show this help message`)
 }

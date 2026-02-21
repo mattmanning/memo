@@ -225,6 +225,20 @@ func runDaemon() {
 		json.NewEncoder(w).Encode(resp)
 	})
 
+	mux.HandleFunc("/log", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		entries, err := LoadLog(logPath())
+		if err != nil {
+			http.Error(w, fmt.Sprintf("failed to load log: %v", err), http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(entries)
+	})
+
 	mux.HandleFunc("/reorder", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
