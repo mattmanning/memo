@@ -2,6 +2,10 @@
 
 Your brain's task stack. When you get pulled into something new, push it onto the stack so you don't lose track of what you were doing before.
 
+- **Never lose track** of what you were doing before a distraction
+- **Instant commands** via in-memory daemon
+- **Timestamped log** of all work sessions for later review
+
 ## Install
 
 ### Homebrew
@@ -88,3 +92,15 @@ State is persisted to `~/.memo/state.json` on every change, so nothing is lost i
 | `memo log` | Show all task activity (pushes, pops, switches) |
 | `memo history` | Show completed tasks with start/finish times and durations |
 | `memo --help` | Show help |
+
+## Data
+
+All data is stored in `~/.memo/`:
+
+```
+~/.memo/
+├── memo.sock    # Unix socket for daemon communication
+├── memo.pid     # Daemon process ID
+├── state.json   # Current task stack
+└── log.jsonl    # Timestamped work sessions
+```
