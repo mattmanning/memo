@@ -161,6 +161,108 @@ func runDaemon() {
 		json.NewEncoder(w).Encode(resp)
 	})
 
+	mux.HandleFunc("/switch", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		mu.Lock()
+		defer mu.Unlock()
+
+		started, paused := stack.Switch()
+		if started == nil {
+			http.Error(w, "need at least 2 tasks to switch", http.StatusBadRequest)
+			return
+		}
+
+		now := time.Now().UTC()
+		LogTaskStop(logPath(), *paused, now, "switched")
+		SaveState(stack, statePath())
+
+		resp := struct {
+			Started Task `json:"started"`
+			Paused  Task `json:"paused"`
+		}{
+			Started: *started,
+			Paused:  *paused,
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(resp)
+	})
+
+	mux.HandleFunc("/queue", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		var req struct {
+			Description string `json:"description"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			http.Error(w, "bad request", http.StatusBadRequest)
+			return
+		}
+		if strings.TrimSpace(req.Description) == "" {
+			http.Error(w, "description required", http.StatusBadRequest)
+			return
+		}
+
+		mu.Lock()
+		defer mu.Unlock()
+
+		queued := stack.Queue(req.Description)
+		SaveState(stack, statePath())
+
+		resp := struct {
+			Queued  Task  `json:"queued"`
+			Current *Task `json:"current,omitempty"`
+		}{
+			Queued:  *queued,
+			Current: stack.Peek(),
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(resp)
+	})
+
+	mux.HandleFunc("/reorder", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		var req struct {
+			Order []int `json:"order"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			http.Error(w, "bad request", http.StatusBadRequest)
+			return
+		}
+
+		mu.Lock()
+		defer mu.Unlock()
+
+		oldTop := stack.Peek()
+		var oldTopDesc string
+		if oldTop != nil {
+			oldTopDesc = oldTop.Description
+		}
+
+		if err := stack.Reorder(req.Order); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		now := time.Now().UTC()
+		newTop := stack.Peek()
+		if oldTop != nil && newTop != nil && oldTopDesc != newTop.Description {
+			LogTaskStop(logPath(), Task{Description: oldTopDesc, StartedAt: oldTop.StartedAt}, now, "reordered")
+		}
+		SaveState(stack, statePath())
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(stack)
+	})
+
 	// Handle signals for clean shutdown
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, syscall.SIGTERM, syscall.SIGINT)

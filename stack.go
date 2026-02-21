@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"time"
 )
 
@@ -45,6 +46,45 @@ func (s *TaskStack) List() []Task {
 
 func (s *TaskStack) Len() int {
 	return len(s.Tasks)
+}
+
+func (s *TaskStack) Switch() (started, paused *Task) {
+	if len(s.Tasks) < 2 {
+		return nil, nil
+	}
+	s.Tasks[0], s.Tasks[1] = s.Tasks[1], s.Tasks[0]
+	return &s.Tasks[0], &s.Tasks[1]
+}
+
+func (s *TaskStack) Queue(description string) *Task {
+	t := Task{
+		Description: description,
+		StartedAt:   time.Now().UTC(),
+	}
+	s.Tasks = append(s.Tasks, t)
+	return &s.Tasks[len(s.Tasks)-1]
+}
+
+func (s *TaskStack) Reorder(order []int) error {
+	if len(order) != len(s.Tasks) {
+		return fmt.Errorf("order length %d does not match stack length %d", len(order), len(s.Tasks))
+	}
+	seen := make(map[int]bool, len(order))
+	for _, idx := range order {
+		if idx < 0 || idx >= len(s.Tasks) {
+			return fmt.Errorf("index %d out of range", idx)
+		}
+		if seen[idx] {
+			return fmt.Errorf("duplicate index %d", idx)
+		}
+		seen[idx] = true
+	}
+	reordered := make([]Task, len(s.Tasks))
+	for i, idx := range order {
+		reordered[i] = s.Tasks[idx]
+	}
+	s.Tasks = reordered
+	return nil
 }
 
 func (s *TaskStack) MarshalJSON() ([]byte, error) {

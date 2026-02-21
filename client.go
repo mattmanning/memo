@@ -122,6 +122,96 @@ func (c *memoClient) Pop() {
 	}
 }
 
+func (c *memoClient) Switch() {
+	resp, err := c.http.Post("http://memo/switch", "application/json", nil)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error: %v\n", err)
+		os.Exit(1)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusBadRequest {
+		fmt.Println("Need at least 2 tasks to switch.")
+		return
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		fmt.Fprintf(os.Stderr, "error: server returned %s\n", resp.Status)
+		os.Exit(1)
+	}
+
+	var result struct {
+		Started Task `json:"started"`
+		Paused  Task `json:"paused"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		fmt.Fprintf(os.Stderr, "error: %v\n", err)
+		os.Exit(1)
+	}
+
+	fmt.Printf("Paused: %s\n", result.Paused.Description)
+	fmt.Printf("Resuming: %s\n", result.Started.Description)
+}
+
+func (c *memoClient) Queue(description string) {
+	body := strings.NewReader(fmt.Sprintf(`{"description":%q}`, description))
+	resp, err := c.http.Post("http://memo/queue", "application/json", body)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error: %v\n", err)
+		os.Exit(1)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		fmt.Fprintf(os.Stderr, "error: server returned %s\n", resp.Status)
+		os.Exit(1)
+	}
+
+	var result struct {
+		Queued  Task  `json:"queued"`
+		Current *Task `json:"current,omitempty"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		fmt.Fprintf(os.Stderr, "error: %v\n", err)
+		os.Exit(1)
+	}
+
+	fmt.Printf("Queued: %s\n", result.Queued.Description)
+}
+
+func (c *memoClient) Reorder(order []int) error {
+	orderJSON, err := json.Marshal(struct {
+		Order []int `json:"order"`
+	}{Order: order})
+	if err != nil {
+		return err
+	}
+	resp, err := c.http.Post("http://memo/reorder", "application/json", strings.NewReader(string(orderJSON)))
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("server returned %s", resp.Status)
+	}
+	return nil
+}
+
+func (c *memoClient) FetchStack() (*TaskStack, error) {
+	resp, err := c.http.Get("http://memo/stack")
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	var stack TaskStack
+	if err := json.NewDecoder(resp.Body).Decode(&stack); err != nil {
+		return nil, err
+	}
+	return &stack, nil
+}
+
 func formatDuration(d time.Duration) string {
 	d = d.Round(time.Second)
 	if d < time.Minute {
