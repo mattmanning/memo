@@ -72,6 +72,13 @@ func runDaemon() {
 
 	mux := http.NewServeMux()
 
+	mux.HandleFunc("/version", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(struct {
+			Version string `json:"version"`
+		}{Version: Version})
+	})
+
 	mux.HandleFunc("/stack", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
@@ -343,6 +350,31 @@ func ensureDaemon() {
 	}
 	fmt.Fprintf(os.Stderr, "error: daemon did not start in time\n")
 	os.Exit(1)
+}
+
+func killDaemon() {
+	data, err := os.ReadFile(pidPath())
+	if err != nil {
+		return
+	}
+	pid, err := strconv.Atoi(strings.TrimSpace(string(data)))
+	if err != nil {
+		return
+	}
+	process, err := os.FindProcess(pid)
+	if err != nil {
+		return
+	}
+	process.Signal(syscall.SIGTERM)
+	// Wait briefly for clean shutdown
+	for i := 0; i < 10; i++ {
+		time.Sleep(50 * time.Millisecond)
+		if err := process.Signal(syscall.Signal(0)); err != nil {
+			break
+		}
+	}
+	os.Remove(socketPath())
+	os.Remove(pidPath())
 }
 
 func tryConnect(sock string) bool {

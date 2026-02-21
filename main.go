@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
@@ -8,20 +9,44 @@ import (
 	"golang.org/x/term"
 )
 
+const Version = "0.2.1"
+
+func connectClient() *memoClient {
+	ensureDaemon()
+	c := newClient()
+
+	resp, err := c.http.Get("http://memo/version")
+	needRestart := err != nil || resp.StatusCode != 200
+	if !needRestart {
+		var v struct {
+			Version string `json:"version"`
+		}
+		if decErr := json.NewDecoder(resp.Body).Decode(&v); decErr != nil || v.Version != Version {
+			needRestart = true
+		}
+		resp.Body.Close()
+	}
+
+	if needRestart {
+		killDaemon()
+		ensureDaemon()
+		c = newClient()
+	}
+	return c
+}
+
 func main() {
 	args := os.Args[1:]
 
 	if len(args) == 0 {
-		ensureDaemon()
-		c := newClient()
+		c := connectClient()
 		c.Current()
 		return
 	}
 
 	switch args[0] {
 	case "stack":
-		ensureDaemon()
-		c := newClient()
+		c := connectClient()
 		if term.IsTerminal(int(os.Stdout.Fd())) {
 			runTUI(c)
 		} else {
@@ -62,8 +87,7 @@ func main() {
 }
 
 func runClient(command string, args ...string) {
-	ensureDaemon()
-	c := newClient()
+	c := connectClient()
 	switch command {
 	case "push":
 		c.Push(args[0])
