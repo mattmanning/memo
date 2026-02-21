@@ -35,13 +35,27 @@ memo push "review PR #42"
 # Paused: fix auth bug
 # Started: review PR #42
 
-memo
+memo list
 # → review PR #42 (working for 12m)
 #   fix auth bug (paused)
 
-memo pop
-# Done: review PR #42 (12m)
+memo switch
+# Paused: review PR #42
 # Resuming: fix auth bug
+
+memo queue "update docs"
+# Queued: update docs
+
+memo pop
+# Done: fix auth bug (25m)
+# Resuming: review PR #42
+```
+
+Running `memo` with no arguments launches an interactive TUI for choosing which task to work on. Use arrow keys to pick a task and press enter to move it to the top of the stack.
+
+```
+→ review PR #42 (working for 3m)
+  update docs
 ```
 
 ## How it works
@@ -54,7 +68,10 @@ State is persisted to `~/.memo/state.json` on every change, so nothing is lost i
 
 | Command | Description |
 |---|---|
-| `memo` | Show the current task stack |
+| `memo` | Interactive task picker (falls back to `list` if non-interactive) |
+| `memo list` | Show the current task stack |
 | `memo push <description>` | Push a new task onto the stack |
 | `memo pop` | Complete the current task and resume the previous one |
+| `memo switch` | Swap the top two tasks |
+| `memo queue <description>` | Add a task to the bottom of the stack |
 | `memo --help` | Show help |
