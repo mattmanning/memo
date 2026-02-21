@@ -1,6 +1,6 @@
 # memo
 
-A task stack for your terminal. When you get pulled into something new, push it onto the stack so you don't lose track of what you were doing before.
+Your brain's task stack. When you get pulled into something new, push it onto the stack so you don't lose track of what you were doing before.
 
 ## Install
 
