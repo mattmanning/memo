@@ -14,17 +14,20 @@ func main() {
 	if len(args) == 0 {
 		ensureDaemon()
 		c := newClient()
-		if term.IsTerminal(int(os.Stdout.Fd())) {
-			runTUI(c)
-		} else {
-			c.List()
-		}
+		c.Current()
 		return
 	}
 
 	switch args[0] {
-	case "list":
-		runClient("list")
+	case "stack":
+		ensureDaemon()
+		c := newClient()
+		if term.IsTerminal(int(os.Stdout.Fd())) {
+			runTUI(c)
+		} else {
+			c.Stack()
+		}
+		return
 	case "push":
 		if len(args) < 2 {
 			fmt.Fprintln(os.Stderr, "Usage: memo push <description>")
@@ -62,8 +65,6 @@ func runClient(command string, args ...string) {
 	ensureDaemon()
 	c := newClient()
 	switch command {
-	case "list":
-		c.List()
 	case "push":
 		c.Push(args[0])
 	case "pop":
@@ -83,8 +84,8 @@ func printUsage() {
 	fmt.Println(`memo - task stack manager
 
 Usage:
-  memo                    Interactive task reorder (or show stack if non-interactive)
-  memo list               Show current task stack
+  memo                    Show current task
+  memo stack              Interactive task reorder (or show stack if non-interactive)
   memo push <description> Push a new task onto the stack
   memo pop                Pop the current task off the stack
   memo switch             Swap the top two tasks

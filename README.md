@@ -35,9 +35,8 @@ memo push "review PR #42"
 # Paused: fix auth bug
 # Started: review PR #42
 
-memo list
-# → review PR #42 (working for 12m)
-#   fix auth bug (paused)
+memo
+# review PR #42 (working for 12m)
 
 memo switch
 # Paused: review PR #42
@@ -62,11 +61,12 @@ memo history
 #   Duration: 25m
 ```
 
-Running `memo` with no arguments launches an interactive TUI for choosing which task to work on. Use arrow keys to pick a task and press enter to move it to the top of the stack.
+`memo stack` launches an interactive TUI for choosing which task to work on. Use arrow keys to pick a task and press enter to move it to the top of the stack.
 
 ```
-→ review PR #42 (working for 3m)
-  update docs
+memo stack
+# → review PR #42 (working for 3m)
+#   update docs
 ```
 
 ## How it works
@@ -79,8 +79,8 @@ State is persisted to `~/.memo/state.json` on every change, so nothing is lost i
 
 | Command | Description |
 |---|---|
-| `memo` | Interactive task picker (falls back to `list` if non-interactive) |
-| `memo list` | Show the current task stack |
+| `memo` | Show the current task |
+| `memo stack` | Interactive task reorder (or show full stack if non-interactive) |
 | `memo push <description>` | Push a new task onto the stack |
 | `memo pop` | Complete the current task and resume the previous one |
 | `memo switch` | Swap the top two tasks |

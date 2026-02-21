@@ -28,7 +28,7 @@ func newClient() *memoClient {
 	}
 }
 
-func (c *memoClient) List() {
+func (c *memoClient) Stack() {
 	resp, err := c.http.Get("http://memo/stack")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
@@ -54,6 +54,29 @@ func (c *memoClient) List() {
 			fmt.Printf("  %s (paused)\n", task.Description)
 		}
 	}
+}
+
+func (c *memoClient) Current() {
+	resp, err := c.http.Get("http://memo/stack")
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error: %v\n", err)
+		os.Exit(1)
+	}
+	defer resp.Body.Close()
+
+	var stack TaskStack
+	if err := json.NewDecoder(resp.Body).Decode(&stack); err != nil {
+		fmt.Fprintf(os.Stderr, "error: %v\n", err)
+		os.Exit(1)
+	}
+
+	if stack.Len() == 0 {
+		fmt.Println("No tasks. Use \"memo push <description>\" to start one.")
+		return
+	}
+
+	top := stack.List()[0]
+	fmt.Printf("%s (working for %s)\n", top.Description, formatDuration(time.Since(top.StartedAt)))
 }
 
 func (c *memoClient) Push(description string) {

@@ -75,7 +75,7 @@ func runTUI(client *memoClient) {
 	}
 
 	if stack.Len() < 2 {
-		client.List()
+		client.Stack()
 		return
 	}
 
