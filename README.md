@@ -55,7 +55,7 @@ memo pop
 
 memo drop
 # Dropped: review PR #42 (3m)
-# No more tasks.
+# Resuming: update docs
 
 memo log
 # [2026-02-20 14:30] pushed     "fix auth bug" (worked 12m)
