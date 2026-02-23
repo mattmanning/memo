@@ -168,6 +168,42 @@ func runDaemon() {
 		json.NewEncoder(w).Encode(resp)
 	})
 
+	mux.HandleFunc("/drop", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		mu.Lock()
+		defer mu.Unlock()
+
+		dropped := stack.Pop()
+		if dropped == nil {
+			http.Error(w, "stack is empty", http.StatusBadRequest)
+			return
+		}
+
+		now := time.Now().UTC()
+		LogTaskStop(logPath(), *dropped, now, "dropped")
+		SaveState(stack, statePath())
+
+		var resuming *Task
+		if top := stack.Peek(); top != nil {
+			copy := *top
+			resuming = &copy
+		}
+
+		resp := struct {
+			Dropped  Task  `json:"dropped"`
+			Resuming *Task `json:"resuming,omitempty"`
+		}{
+			Dropped:  *dropped,
+			Resuming: resuming,
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(resp)
+	})
+
 	mux.HandleFunc("/switch", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)

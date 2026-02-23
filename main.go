@@ -62,6 +62,8 @@ func main() {
 		runClient("push", description)
 	case "pop":
 		runClient("pop")
+	case "drop":
+		runClient("drop")
 	case "switch":
 		runClient("switch")
 	case "log":
@@ -93,6 +95,8 @@ func runClient(command string, args ...string) {
 		c.Push(args[0])
 	case "pop":
 		c.Pop()
+	case "drop":
+		c.Drop()
 	case "switch":
 		c.Switch()
 	case "queue":
@@ -112,6 +116,7 @@ Usage:
   memo stack              Interactive task reorder (or show stack if non-interactive)
   memo push <description> Push a new task onto the stack
   memo pop                Pop the current task off the stack
+  memo drop               Drop the current task without completing it
   memo switch             Swap the top two tasks
   memo queue <description> Add a task to the bottom of the stack
   memo log                Show all task activity log

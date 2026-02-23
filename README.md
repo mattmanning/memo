@@ -53,6 +53,10 @@ memo pop
 # Done: fix auth bug (25m)
 # Resuming: review PR #42
 
+memo drop
+# Dropped: review PR #42 (3m)
+# No more tasks.
+
 memo log
 # [2026-02-20 14:30] pushed     "fix auth bug" (worked 12m)
 # [2026-02-20 14:42] switched   "review PR #42" (worked 3m)
@@ -87,6 +91,7 @@ State is persisted to `~/.memo/state.json` on every change, so nothing is lost i
 | `memo stack` | Interactive task reorder (or show full stack if non-interactive) |
 | `memo push <description>` | Push a new task onto the stack |
 | `memo pop` | Complete the current task and resume the previous one |
+| `memo drop` | Abandon the current task and resume the previous one |
 | `memo switch` | Swap the top two tasks |
 | `memo queue <description>` | Add a task to the bottom of the stack |
 | `memo log` | Show all task activity (pushes, pops, switches) |

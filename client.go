@@ -145,6 +145,43 @@ func (c *memoClient) Pop() {
 	}
 }
 
+func (c *memoClient) Drop() {
+	resp, err := c.http.Post("http://memo/drop", "application/json", nil)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error: %v\n", err)
+		os.Exit(1)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusBadRequest {
+		fmt.Println("No tasks to drop.")
+		return
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		fmt.Fprintf(os.Stderr, "error: server returned %s\n", resp.Status)
+		os.Exit(1)
+	}
+
+	var result struct {
+		Dropped  Task  `json:"dropped"`
+		Resuming *Task `json:"resuming,omitempty"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		fmt.Fprintf(os.Stderr, "error: %v\n", err)
+		os.Exit(1)
+	}
+
+	duration := time.Since(result.Dropped.StartedAt)
+	fmt.Printf("Dropped: %s (%s)\n", result.Dropped.Description, formatDuration(duration))
+
+	if result.Resuming != nil {
+		fmt.Printf("Resuming: %s\n", result.Resuming.Description)
+	} else {
+		fmt.Println("No more tasks.")
+	}
+}
+
 func (c *memoClient) Switch() {
 	resp, err := c.http.Post("http://memo/switch", "application/json", nil)
 	if err != nil {
